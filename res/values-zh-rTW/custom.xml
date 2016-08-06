@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <string name="cpu_type" msgid="507679567812241348">處理器類型</string>
+    <string name="software_version" msgid="415374954196167201">軟件版本</string>
+
+    <string name="system_update_section_title" msgid="7815209034443782061">系統升級</string>
+    <string name="system_recovery_title" msgid="7815209034443782061">Recovery模式</string>
+    <string name="system_recovery_summary" msgid="7815209034443782061">重啟進入系統Recovery模式,可以清除分區數據或系統升級</string>
+    <string name="system_recovery_dialog_massage" msgid="7815209034443782061">立即重啟進入系統Recovery模式,可以清除分區數據或系統升級？</string>
+
+    <string name="usb_storage_usage">USB 大容量存儲</string>
+
+</resources>

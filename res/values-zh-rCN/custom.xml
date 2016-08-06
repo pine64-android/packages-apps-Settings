@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- display settings -->
+    <!-- screen off timeout -->
+    <string name="screen_off_never_sleep_summary">"永不"</string>
+	<!-- hdmi -->
+    <string name="hdmi_setting">HDMI设置</string>
+    <string name="hdmi_output_mode">HDMI输出模式</string>
+    <string name="hdmi_output_mode_summary">设置默认的HDMI输出制式</string>
+    <string name="hdmi_full_screen">HDMI全屏显示</string>
+    <string name="hdmi_full_screen_summary">设置HDMI输出是否全屏显示</string>
+    <string name="screen_scrap_edge">屏幕切边</string>
+    <string name="screen_scrap_edge_summary">HDMI输出屏幕边框缩放</string>
+    <string name="screen_scrap_edge_height">高</string>
+    <string name="screen_scrap_edge_width">宽</string>
+    <!-- hdmi array -->
+    <string-array name="hdmi_output_mode_720p_entries">
+        <item>HDMI 720P 50HZ</item>
+        <item>HDMI 720P 60HZ</item>
+    </string-array>
+    <string-array name="hdmi_output_mode_entries">
+        <item>HDMI 720P 60HZ</item>
+        <item>HDMI 1080P 60HZ</item>
+    </string-array>
+    <!-- bright system -->
+    <string name="bright_system">丽色系统</string>
+    <string name="bright_system_summary">丽色系统用于玩游戏,观看视频图片,效果更佳</string>
+    <string name="brightness_light">智能背光</string>
+    <string name="demo_mode">演示模式</string>
+    <string name="demo_mode_summary">只对半个屏幕有效,便于看出效果</string>
+
+    <!-- Sound settings -->
+    <string name="boot_music_enable_title">开机音乐</string>
+    
+    <!-- vvs switch -->
+    <string name="vvs_switch_title">3D音效</string>
+    <string name="vvs_switch_off">已关闭</string>
+    <string name="vvs_switch_on">已打开</string>
+    
+    
+    <!-- storage custom label -->
+    <string name="custom_usb_eject">"卸载 USB 存储设备"</string>
+    <string name="custom_sd_eject">"卸载 SD 卡"</string>
+    <string name="custom_usb_eject_summary">"卸载内部 USB 存储设备"</string>
+    <string name="custom_sd_eject_summary">"需要先卸载 SD 卡，然后才能将其安全移除"</string>
+    <string name="custom_usb_insert_summary">"插入要装载的 USB 存储设备"</string>
+    <string name="custom_sd_insert_summary">"插入 SD 卡进行安装"</string>
+    <string name="custom_usb_mount">"装载 USB 存储设备"</string>
+    <string name="custom_sd_mount">"安装 SD 卡"</string>
+    <string name="custom_usb_mount_summary"></string>
+    <string name="custom_sd_mount_summary"></string>
+    <string name="custom_usb_format">"格式化 USB 存储设备"</string>
+    <string name="custom_sd_format">"格式化 SD 卡"</string>
+    <string name="custom_usb_format_summary">"清除内部 USB 存储设备中的全部数据，例如音乐和照片"</string>
+    <string name="custom_sd_format_summary">"清除 SD 卡中的全部数据，例如音乐和照片"</string>
+    <string name="custom_usb_media_format_desc">"要清空所有 USB 存储设备吗？如果这样做，您会丢失其中存储的"<b>"全部"</b>"数据！"</string>
+    <string name="custom_sd_media_format_desc">"要清空该 SD 卡吗？如果这样做，您会丢失其中存储的"<b>"全部"</b>"数据！"</string>
+    <string name="custom_usb_media_format_final_desc">"要清空 USB 存储设备（此操作会删除其中存储的全部文件）吗？请注意，此操作无法撤消！"</string>
+    <string name="custom_sd_media_format_final_desc">"要清空该 SD 卡（此操作会删除其中存储的全部文件）吗？请注意，此操作无法撤消！"</string>
+    <string name="custom_usb_dlg_confirm_unmount_text">"如果卸载该 USB 存储设备，您当前使用的某些应用会停止运行，并且在您重新装载该设备前可能都无法使用。"</string>
+    <string name="custom_sd_dlg_confirm_unmount_text">"如果卸载该 SD 卡，您当前使用的某些应用会停止，并且在您重新装载该 SD 卡前，这些应用可能都无法使用。"</string>
+    <string name="custom_usb_dlg_error_unmount_text">"无法卸载 USB 存储设备，请稍后重试。"</string>
+    <string name="custom_sd_dlg_error_unmount_text">"无法卸载 SD 卡，请稍后重试。"</string>
+    <string name="custom_usb_dlg_confirm_unmount_title">"要卸载 USB 存储设备吗？"</string>
+    <string name="custom_sd_dlg_confirm_unmount_title">"要卸载 SD 卡吗？"</string>
+    <string name="custom_usb_unmount_inform_text">"系统将会卸载 USB 存储设备。"</string>
+    <string name="custom_sd_unmount_inform_text">"系统将会卸载 SD 卡。"</string>
+
+    <!-- memory -->
+    <string name="memory_info">存储信息</string>
+    <string name="memory_ram_size">RAM 总容量</string>
+    <string name="memory_flash_size">FLASH 总容量</string>
+ 
+    <string name="usb_storage_usage">USB 大容量存储</string>
+
+    <!-- system update  -->
+    <string name="system_update_section_title" msgid="7815209034443782061">"系统升级"</string>
+    <string name="system_recovery_title" msgid="7815209034443782061">"Recovery模式"</string>
+    <string name="system_recovery_summary" msgid="7815209034443782061">"重启进入系统Recovery模式,可以清除分区数据或系统升级"</string>
+    <string name="system_recovery_dialog_massage" msgid="7815209034443782061">"立即重启进入系统Recovery模式,可以清除分区数据或系统升级？"</string>
+
+    <string name="cpu_type" msgid="410C2A9B00B122B8310">"处理器类型"</string>
+    <string name="software_version" msgid="610C2A9B00B12356310">"固件版本号"</string>
+
+    <!-- gesture screenshot -->
+    <string name="title_gesture_screenshot">手势截屏</string>
+    <string name="title_gesture_screenshot_summary">用两根手指从屏幕右侧最边缘向内滑动一段距离触发截屏功能</string>
+    <!-- gesture screenrecord -->
+    <string name="title_gesture_screenrecord">手势录像</string>
+    <string name="title_gesture_screenrecord_summary">用三根手指从屏幕右侧最边缘向内滑动一段距离触发屏幕录制功能，再次滑动停止录制</string>
+</resources>

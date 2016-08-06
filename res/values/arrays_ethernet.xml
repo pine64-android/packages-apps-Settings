@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--ethernet mode select -->
+    <string-array name="ethernet_mode_location">
+       <item>@string/usestatic</item>
+       <item>@string/usedhcp</item>
+    </string-array>
+   <string-array name="ethernet_mode_values">
+      <item>StaticIP</item>
+      <item>DHCP</item>
+   </string-array>
+</resources>
