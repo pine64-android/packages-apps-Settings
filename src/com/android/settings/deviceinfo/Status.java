@@ -124,6 +124,7 @@ public class Status extends PreferenceActivity {
             }
         }
     }
+    
 
     private BroadcastReceiver mBatteryInfoReceiver = new BroadcastReceiver() {
 

@@ -30,6 +30,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
 import android.os.UserHandle;
+import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceCategory;
@@ -100,6 +101,10 @@ public class AccessibilitySettings extends SettingsPreferenceFragment implements
             "screen_magnification_preference_screen";
     private static final String DISPLAY_DALTONIZER_PREFERENCE_SCREEN =
             "daltonizer_preference_screen";
+    private static final String TOGGLE_GESTURE_SCRERNSHOT_PREFERENCE=
+            "toggle_gesture_screenshot_preference";
+    private static final String TOGGLE_GESTURE_SCRERNRECORD_PREFERENCE=
+            "toggle_gesture_screenrecord_preference";
 
     // Extras passed to sub-fragments.
     static final String EXTRA_PREFERENCE_KEY = "preference_key";
@@ -195,6 +200,8 @@ public class AccessibilitySettings extends SettingsPreferenceFragment implements
     private PreferenceScreen mGlobalGesturePreferenceScreen;
     private PreferenceScreen mDisplayDaltonizerPreferenceScreen;
     private SwitchPreference mToggleInversionPreference;
+    private CheckBoxPreference mGestureScreenshotPreference;
+    private CheckBoxPreference mGestureScreenrecordPreference;
 
     private int mLongPressTimeoutDefault;
 
@@ -281,6 +288,14 @@ public class AccessibilitySettings extends SettingsPreferenceFragment implements
         } else if (mDisplayMagnificationPreferenceScreen == preference) {
             handleDisplayMagnificationPreferenceScreenClick();
             return true;
+        }else if(mGestureScreenshotPreference == preference){
+			Settings.System.putInt(getContentResolver(),
+                Settings.System.GESTURE_SCREENSHOT_ENABLE,
+                mGestureScreenshotPreference.isChecked() ? 1 : 0);
+        } else if(mGestureScreenrecordPreference == preference){
+			Settings.System.putInt(getContentResolver(),
+                Settings.System.GESTURE_SCREENRECORD_ENABLE,
+                mGestureScreenrecordPreference.isChecked() ? 1 : 0);
         }
         return super.onPreferenceTreeClick(preferenceScreen, preference);
     }
@@ -418,6 +433,8 @@ public class AccessibilitySettings extends SettingsPreferenceFragment implements
             // nor long press power does not show global actions menu.
             mSystemsCategory.removePreference(mGlobalGesturePreferenceScreen);
         }
+        mGestureScreenshotPreference = (CheckBoxPreference) findPreference(TOGGLE_GESTURE_SCRERNSHOT_PREFERENCE);
+        mGestureScreenrecordPreference = (CheckBoxPreference) findPreference(TOGGLE_GESTURE_SCRERNRECORD_PREFERENCE);
     }
 
     private void updateAllPreferences() {
@@ -583,6 +600,14 @@ public class AccessibilitySettings extends SettingsPreferenceFragment implements
         } else {
             mGlobalGesturePreferenceScreen.setSummary(
                     R.string.accessibility_global_gesture_preference_summary_off);
+        }
+        if(mGestureScreenshotPreference != null) {
+            mGestureScreenshotPreference.setChecked(Settings.System.getInt(getContentResolver(),
+                    Settings.System.GESTURE_SCREENSHOT_ENABLE, 0)==1?true:false);
+        }
+        if(mGestureScreenrecordPreference != null) {
+            mGestureScreenrecordPreference.setChecked(Settings.System.getInt(getContentResolver(),
+                    Settings.System.GESTURE_SCREENRECORD_ENABLE, 0)==1?true:false);
         }
     }
 

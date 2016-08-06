@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
@@ -44,6 +45,9 @@ import com.android.settings.search.Indexable.SearchIndexProvider;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 /**
  * Gesture lock pattern settings.
@@ -59,10 +63,12 @@ public class PrivacySettings extends SettingsPreferenceFragment implements
     private static final String CONFIGURE_ACCOUNT = "configure_account";
     private static final String BACKUP_INACTIVE = "backup_inactive";
     private static final String PERSONAL_DATA_CATEGORY = "personal_data_category";
+    private static final String SYSTEM_RECOVERY = "system_recovery";
     private static final String TAG = "PrivacySettings";
     private IBackupManager mBackupManager;
     private SwitchPreference mBackup;
     private SwitchPreference mAutoRestore;
+    private PreferenceScreen mRecovery;
     private Dialog mConfirmDialog;
     private PreferenceScreen mConfigure;
     private boolean mEnabled;
@@ -110,6 +116,8 @@ public class PrivacySettings extends SettingsPreferenceFragment implements
                 }
             }
         }
+
+        mRecovery = (PreferenceScreen) screen.findPreference(SYSTEM_RECOVERY);
         updateToggles();
     }
 
@@ -162,6 +170,16 @@ public class PrivacySettings extends SettingsPreferenceFragment implements
         }
     };
 
+    @Override
+    public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
+            Preference preference) {
+        if(preference == mRecovery) {
+            showRecoveryDialog();
+        }
+        return super.onPreferenceTreeClick(preferenceScreen, preference);
+    }
+
+
     private void showEraseBackupDialog() {
         mDialogType = DIALOG_ERASE_BACKUP;
         CharSequence msg = getResources().getText(R.string.backup_erase_dialog_message);
@@ -171,6 +189,50 @@ public class PrivacySettings extends SettingsPreferenceFragment implements
                 .setPositiveButton(android.R.string.ok, this)
                 .setNegativeButton(android.R.string.cancel, this)
                 .show();
+    }
+
+    private void showRecoveryDialog() {
+        mConfirmDialog = new AlertDialog.Builder(getActivity()).setTitle(R.string.system_recovery_title)
+            .setMessage(getActivity().getString(R.string.system_recovery_dialog_massage))
+            .setPositiveButton(android.R.string.ok,new DialogInterface.OnClickListener()
+                {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                    Intent intent = new Intent();
+                    intent.setAction("android.need.alarm.reset");
+                    getActivity().sendBroadcast(intent);
+
+                    try {
+                        Thread.sleep(2);
+                    } catch(Exception e) {
+				    }
+
+                    rebootRecovery();
+                }
+            })
+            .setNegativeButton(android.R.string.cancel,this)
+            .show();
+    }
+
+    private void rebootRecovery() {
+        File RECOVERY_DIR = new File("/cache/recovery");
+        File COMMAND_FILE = new File(RECOVERY_DIR, "command");
+        String SHOW_TEXT="--show_text";
+        RECOVERY_DIR.mkdirs();
+        // In case we need it         		 COMMAND_FILE.delete();
+        // In case it's not writable
+        try {
+            FileWriter command = new FileWriter(COMMAND_FILE);
+            command.write(SHOW_TEXT);
+            command.write("\n");
+            command.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+		}
+
+        PowerManager pm = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
+        pm.reboot("recovery");
     }
 
     /*

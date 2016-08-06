@@ -400,6 +400,7 @@ public class UserSettings extends SettingsPreferenceFragment
         UserInfo newUserInfo = mUserManager.createSecondaryUser(
                 getResources().getString(R.string.user_new_profile_name),
                 UserInfo.FLAG_RESTRICTED);
+        if (newUserInfo == null) return null;
         int userId = newUserInfo.id;
         UserHandle user = new UserHandle(userId);
         mUserManager.setUserRestriction(UserManager.DISALLOW_MODIFY_ACCOUNTS, true, user);
@@ -671,6 +672,10 @@ public class UserSettings extends SettingsPreferenceFragment
                         user = createTrustedUser();
                     } else {
                         user = createLimitedUser();
+                    }
+                    if (user == null) {
+                        Log.w(TAG, "addUserNow failed.(user is null)");
+                        return ;
                     }
                     synchronized (mUserLock) {
                         mAddingUser = false;

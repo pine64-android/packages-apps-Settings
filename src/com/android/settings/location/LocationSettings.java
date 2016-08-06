@@ -20,6 +20,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.location.SettingInjectorService;
 import android.os.Binder;
 import android.os.Bundle;
@@ -321,9 +322,17 @@ public class LocationSettings extends LocationSettingsBase
     @Override
     public void onSwitchChanged(Switch switchView, boolean isChecked) {
         if (isChecked) {
-            setLocationMode(android.provider.Settings.Secure.LOCATION_MODE_HIGH_ACCURACY);
+            if (hasGpsFeature()) {
+                setLocationMode(android.provider.Settings.Secure.LOCATION_MODE_HIGH_ACCURACY);
+            } else {
+                setLocationMode(android.provider.Settings.Secure.LOCATION_MODE_BATTERY_SAVING);
+            }
         } else {
             setLocationMode(android.provider.Settings.Secure.LOCATION_MODE_OFF);
         }
+    }
+
+    private boolean hasGpsFeature() {
+        return getPackageManager().hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS);
     }
 }

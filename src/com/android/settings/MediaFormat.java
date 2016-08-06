@@ -23,6 +23,8 @@ import android.os.storage.StorageVolume;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
+import android.app.ActionBar;
 
 import com.android.internal.os.storage.ExternalStorageFormatter;
 
@@ -42,9 +44,11 @@ public class MediaFormat extends Activity {
 
     private View mInitialView;
     private Button mInitiateButton;
+    private TextView mInitiateTextView;
 
     private View mFinalView;
     private Button mFinalButton;
+    private TextView mFinalTextView;
 
     /**
      * The user has gone through the multiple confirmation, so now we go ahead
@@ -118,6 +122,14 @@ public class MediaFormat extends Activity {
             mFinalButton =
                     (Button) mFinalView.findViewById(R.id.execute_media_format);
             mFinalButton.setOnClickListener(mFinalClickListener);
+            mFinalTextView = (TextView) mFinalView.findViewById(R.id.execute_media_format_txt);
+            StorageVolume volume = getIntent().getParcelableExtra(
+            StorageVolume.EXTRA_STORAGE_VOLUME);
+            if (volume.getPath().contains("usb")){
+                mFinalTextView.setText(R.string.custom_usb_media_format_final_desc);
+            }else{
+                mFinalTextView.setText(R.string.custom_sd_media_format_final_desc);
+            }
         }
 
         setContentView(mFinalView);
@@ -141,6 +153,18 @@ public class MediaFormat extends Activity {
             mInitiateButton =
                     (Button) mInitialView.findViewById(R.id.initiate_media_format);
             mInitiateButton.setOnClickListener(mInitiateListener);
+            mInitiateTextView = (TextView) mInitialView.findViewById(R.id.media_format_txt);
+            StorageVolume volume = getIntent().getParcelableExtra(
+                    StorageVolume.EXTRA_STORAGE_VOLUME);
+            if (volume.getPath().contains("usb")){
+                mInitiateTextView.setText(R.string.custom_usb_media_format_desc);
+                mInitiateButton.setText(R.string.custom_usb_format);
+                getActionBar().setTitle(R.string.custom_usb_format);
+            }else{
+                mInitiateTextView.setText(R.string.custom_sd_media_format_desc);
+                mInitiateButton.setText(R.string.custom_sd_format);
+                getActionBar().setTitle(R.string.custom_sd_format);
+            }
         }
 
         setContentView(mInitialView);

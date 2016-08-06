@@ -84,6 +84,44 @@ public class StorageVolumePreferenceCategory extends PreferenceCategory {
     private static final int MSG_UI_UPDATE_APPROXIMATE = 1;
     private static final int MSG_UI_UPDATE_DETAILS = 2;
 
+	private static final int mDefaultStringId[] = {
+        R.string.sd_eject,
+        R.string.sd_eject_summary,
+        R.string.sd_insert_summary,
+        R.string.sd_mount,
+        R.string.sd_mount_summary,
+        R.string.sd_format,
+        R.string.sd_format_summary
+    };
+    private static final int mUsbStringId[] = {
+        R.string.custom_usb_eject,
+        R.string.custom_usb_eject_summary,
+        R.string.custom_usb_insert_summary,
+        R.string.custom_usb_mount,
+        R.string.custom_usb_mount_summary,
+        R.string.custom_usb_format,
+        R.string.custom_usb_format_summary
+    };
+    private static final int mSdStringId[] = {
+        R.string.custom_sd_eject,
+        R.string.custom_sd_eject_summary,
+        R.string.custom_sd_insert_summary,
+        R.string.custom_sd_mount,
+        R.string.custom_sd_mount_summary,
+        R.string.custom_sd_format,
+        R.string.custom_sd_format_summary
+    };
+    class SI {
+        public static final int EJECT = 0;
+        public static final int EJECT_SUMMARY = 1;
+        public static final int INSERT_SUMMARY = 2;
+        public static final int MOUNT = 3;
+        public static final int MOUNT_SUMMARY = 4;
+        public static final int FORMAT = 5;
+        public static final int FORMAT_SUMMARY = 6;
+    }
+    private int mStringId[] = mDefaultStringId;
+
     private Handler mUpdateHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -130,6 +168,13 @@ public class StorageVolumePreferenceCategory extends PreferenceCategory {
 
         setTitle(volume != null ? volume.getDescription(context)
                 : context.getText(R.string.internal_storage));
+        if (mVolume == null) {
+            mStringId = mDefaultStringId;
+        } else if (mVolume.getPath().contains("usb")) {
+            mStringId = mUsbStringId;
+        } else {
+            mStringId = mSdStringId;
+        }
     }
 
     private StorageItemPreference buildItem(int titleRes, int colorRes) {
@@ -201,16 +246,16 @@ public class StorageVolumePreferenceCategory extends PreferenceCategory {
         // Always create the preference since many code rely on it existing
         mMountTogglePreference = new Preference(context);
         if (isRemovable) {
-            mMountTogglePreference.setTitle(R.string.sd_eject);
-            mMountTogglePreference.setSummary(R.string.sd_eject_summary);
+            mMountTogglePreference.setTitle(mStringId[SI.EJECT]);
+            mMountTogglePreference.setSummary(mStringId[SI.EJECT_SUMMARY]);
             addPreference(mMountTogglePreference);
         }
 
         final boolean allowFormat = mVolume != null;
         if (allowFormat) {
             mFormatPreference = new Preference(context);
-            mFormatPreference.setTitle(R.string.sd_format);
-            mFormatPreference.setSummary(R.string.sd_format_summary);
+            mFormatPreference.setTitle(mStringId[SI.FORMAT]);
+            mFormatPreference.setSummary(mStringId[SI.FORMAT_SUMMARY]);
             addPreference(mFormatPreference);
         }
 
@@ -225,6 +270,12 @@ public class StorageVolumePreferenceCategory extends PreferenceCategory {
             } else if (mStorageLow != null) {
                 removePreference(mStorageLow);
                 mStorageLow = null;
+            }
+            if(mVolume != null && mStorageLow != null) {
+                if(mVolume.getPath().contains("usb") || mVolume.getPath().contains("sd")){
+                    removePreference(mStorageLow);
+                    mStorageLow = null;
+                }
             }
         } catch (RemoteException e) {
         }
@@ -251,8 +302,8 @@ public class StorageVolumePreferenceCategory extends PreferenceCategory {
         if (Environment.MEDIA_MOUNTED.equals(state)
                 || Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
             mMountTogglePreference.setEnabled(true);
-            mMountTogglePreference.setTitle(mResources.getString(R.string.sd_eject));
-            mMountTogglePreference.setSummary(mResources.getString(R.string.sd_eject_summary));
+            mMountTogglePreference.setTitle(mResources.getString(mStringId[SI.EJECT]));
+            mMountTogglePreference.setSummary(mResources.getString(mStringId[SI.EJECT_SUMMARY]));
             addPreference(mUsageBarPreference);
             addPreference(mItemTotal);
             addPreference(mItemAvailable);
@@ -260,12 +311,12 @@ public class StorageVolumePreferenceCategory extends PreferenceCategory {
             if (Environment.MEDIA_UNMOUNTED.equals(state) || Environment.MEDIA_NOFS.equals(state)
                     || Environment.MEDIA_UNMOUNTABLE.equals(state)) {
                 mMountTogglePreference.setEnabled(true);
-                mMountTogglePreference.setTitle(mResources.getString(R.string.sd_mount));
-                mMountTogglePreference.setSummary(mResources.getString(R.string.sd_mount_summary));
+                mMountTogglePreference.setTitle(mResources.getString(mStringId[SI.MOUNT]));
+                mMountTogglePreference.setSummary(mResources.getString(mStringId[SI.MOUNT_SUMMARY]));
             } else {
                 mMountTogglePreference.setEnabled(false);
-                mMountTogglePreference.setTitle(mResources.getString(R.string.sd_mount));
-                mMountTogglePreference.setSummary(mResources.getString(R.string.sd_insert_summary));
+                mMountTogglePreference.setTitle(mResources.getString(mStringId[SI.MOUNT]));
+                mMountTogglePreference.setSummary(mResources.getString(mStringId[SI.INSERT_SUMMARY]));
             }
 
             removePreference(mUsageBarPreference);
@@ -288,7 +339,7 @@ public class StorageVolumePreferenceCategory extends PreferenceCategory {
             }
         } else if (mFormatPreference != null) {
             mFormatPreference.setEnabled(mMountTogglePreference.isEnabled());
-            mFormatPreference.setSummary(mResources.getString(R.string.sd_format_summary));
+            mFormatPreference.setSummary(mResources.getString(mStringId[SI.FORMAT_SUMMARY]));
         }
     }
 

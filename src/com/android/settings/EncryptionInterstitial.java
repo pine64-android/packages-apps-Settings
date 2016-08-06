@@ -119,7 +119,7 @@ public class EncryptionInterstitial extends SettingsActivity {
             mDontRequirePasswordToDecryptButton.setText(disableId);
 
             setRequirePasswordState(getActivity().getIntent().getBooleanExtra(
-                    EXTRA_REQUIRE_PASSWORD, true));
+                    EXTRA_REQUIRE_PASSWORD, false));
             return view;
         }
 

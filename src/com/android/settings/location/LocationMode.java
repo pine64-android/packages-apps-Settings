@@ -18,8 +18,9 @@ package com.android.settings.location;
 
 import android.preference.PreferenceScreen;
 import android.provider.Settings;
-
+import android.content.pm.PackageManager;
 import com.android.settings.R;
+import android.content.Context;
 
 /**
  * A page with 3 radio buttons to choose the location mode.
@@ -63,12 +64,21 @@ public class LocationMode extends LocationSettingsBase
         mHighAccuracy = (RadioButtonPreference) root.findPreference(KEY_HIGH_ACCURACY);
         mBatterySaving = (RadioButtonPreference) root.findPreference(KEY_BATTERY_SAVING);
         mSensorsOnly = (RadioButtonPreference) root.findPreference(KEY_SENSORS_ONLY);
-        mHighAccuracy.setOnClickListener(this);
+        if(hasGpsFeature()) {
+            mHighAccuracy.setOnClickListener(this);
+            mSensorsOnly.setOnClickListener(this);
+        } else {
+            root.removePreference(mHighAccuracy);
+            root.removePreference(mSensorsOnly);
+        }
         mBatterySaving.setOnClickListener(this);
-        mSensorsOnly.setOnClickListener(this);
-
         refreshLocationMode();
         return root;
+    }
+
+    private boolean hasGpsFeature() {
+        return getPackageManager().hasSystemFeature(
+                PackageManager.FEATURE_LOCATION_GPS);
     }
 
     private void updateRadioButtons(RadioButtonPreference activated) {

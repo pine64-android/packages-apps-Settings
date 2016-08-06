@@ -79,6 +79,11 @@ public class DeviceInfoSettings extends SettingsPreferenceFragment implements In
     private static final String PROPERTY_EQUIPMENT_ID = "ro.ril.fccid";
     private static final String KEY_DEVICE_FEEDBACK = "device_feedback";
     private static final String KEY_SAFETY_LEGAL = "safetylegal";
+    private static final String KEY_SOFTWARE_VERSION = "software_version";
+    private static final String KEY_CPU_TYPE = "cpu_type";
+    private static final String PROPERTY_CPUTYPE = "ro.sys.cputype";
+    private static final String PROPETY_BASEBAND = "ro.sw.embeded.telephony";
+    private static final String PROPETY_FIRMWARE_VERSION = "ro.product.firmware";
 
     static final int TAPS_TO_BE_A_DEVELOPER = 7;
 
@@ -92,8 +97,12 @@ public class DeviceInfoSettings extends SettingsPreferenceFragment implements In
 
         addPreferencesFromResource(R.xml.device_info_settings);
 
+
+        setStringSummary(KEY_CPU_TYPE, SystemProperties.get(PROPERTY_CPUTYPE, "Unknown"));
         setStringSummary(KEY_FIRMWARE_VERSION, Build.VERSION.RELEASE);
         findPreference(KEY_FIRMWARE_VERSION).setEnabled(true);
+        setStringSummary(KEY_SOFTWARE_VERSION,SystemProperties.get(PROPETY_FIRMWARE_VERSION, "Unknown"));
+
         setValueSummary(KEY_BASEBAND_VERSION, "gsm.version.baseband");
         setStringSummary(KEY_DEVICE_MODEL, Build.MODEL + getMsvSuffix());
         setValueSummary(KEY_EQUIPMENT_ID, PROPERTY_EQUIPMENT_ID);
@@ -123,7 +132,7 @@ public class DeviceInfoSettings extends SettingsPreferenceFragment implements In
                 PROPERTY_EQUIPMENT_ID);
 
         // Remove Baseband version if wifi-only device
-        if (Utils.isWifiOnly(getActivity())) {
+        if (!SystemProperties.getBoolean(PROPETY_BASEBAND,false) || Utils.isWifiOnly(getActivity())) {
             getPreferenceScreen().removePreference(findPreference(KEY_BASEBAND_VERSION));
         }
 

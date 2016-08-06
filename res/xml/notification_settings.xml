@@ -84,8 +84,13 @@
                 android:persistent="false"
                 android:fragment="com.android.settings.notification.OtherSoundSettings" />
 
+				<SwitchPreference
+                android:key="boot_music"
+                android:title="@string/boot_music_enable_title"
+                android:persistent="false"/>
+                		                                    
     </PreferenceCategory>
-
+             
     <PreferenceCategory
         android:key="notification"
         android:title="@string/notification_section_header" >
@@ -116,6 +121,7 @@
                 android:title="@string/manage_notification_access_title"
                 android:persistent="false"
                 android:fragment="com.android.settings.notification.NotificationAccessSettings" />
+                            
 
     </PreferenceCategory>
 

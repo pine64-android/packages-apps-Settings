@@ -864,10 +864,10 @@ public final class Utils {
         if (UserHandle.myUserId() == removingUserId) {
             titleResId = R.string.user_confirm_remove_self_title;
             messageResId = R.string.user_confirm_remove_self_message;
-        } else if (userInfo.isRestricted()) {
+        } else if (userInfo != null && userInfo.isRestricted()) {
             titleResId = R.string.user_profile_confirm_remove_title;
             messageResId = R.string.user_profile_confirm_remove_message;
-        } else if (userInfo.isManagedProfile()) {
+        } else if (userInfo != null && userInfo.isManagedProfile()) {
             titleResId = R.string.work_profile_confirm_remove_title;
             messageResId = R.string.work_profile_confirm_remove_message;
         } else {

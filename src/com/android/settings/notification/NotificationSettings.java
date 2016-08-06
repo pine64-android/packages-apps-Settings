@@ -47,6 +47,7 @@ import android.provider.OpenableColumns;
 import android.provider.SearchIndexableResource;
 import android.provider.Settings;
 import android.util.Log;
+import android.os.SystemProperties;
 
 import com.android.internal.widget.LockPatternUtils;
 import com.android.settings.R;
@@ -75,6 +76,9 @@ public class NotificationSettings extends SettingsPreferenceFragment implements 
     private static final String KEY_NOTIFICATION_PULSE = "notification_pulse";
     private static final String KEY_LOCK_SCREEN_NOTIFICATIONS = "lock_screen_notifications";
     private static final String KEY_NOTIFICATION_ACCESS = "manage_notification_access";
+    private static final String KEY_BOOT_MUSIC = "boot_music";
+    
+    private static final String KEY_VVS_SWITCH = "vvs_switch";
 
     private static final int SAMPLE_CUTOFF = 2000;  // manually cap sample playback at 2 seconds
 
@@ -95,12 +99,17 @@ public class NotificationSettings extends SettingsPreferenceFragment implements 
     private Preference mNotificationRingtonePreference;
     private TwoStatePreference mVibrateWhenRinging;
     private TwoStatePreference mNotificationPulse;
+    private TwoStatePreference mBootMusic;
+    
+    private TwoStatePreference mVvsSwitch;
+    
     private DropDownPreference mLockscreen;
     private Preference mNotificationAccess;
     private boolean mSecure;
     private int mLockscreenSelectedValue;
     private ComponentName mSuppressor;
     private int mRingerMode = -1;
+   
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -136,6 +145,9 @@ public class NotificationSettings extends SettingsPreferenceFragment implements 
         }
         initRingtones(sound);
         initVibrateWhenRinging(sound);
+        initUpdateBootMusic(sound);
+        
+        initUpdateVvsSwitch(sound);
 
         final PreferenceCategory notification = (PreferenceCategory)
                 findPreference(KEY_NOTIFICATION);
@@ -362,6 +374,50 @@ public class NotificationSettings extends SettingsPreferenceFragment implements 
                 Settings.System.VIBRATE_WHEN_RINGING, 0) != 0);
     }
 
+    private void initUpdateBootMusic(PreferenceCategory root) {
+        mBootMusic = (TwoStatePreference) root.findPreference(KEY_BOOT_MUSIC);
+        if (mBootMusic == null) {
+            Log.i(TAG, "Preference not found: " + KEY_BOOT_MUSIC);
+            return;
+        }
+        mBootMusic.setPersistent(false);
+        mBootMusic.setChecked(SystemProperties.getInt("persist.sys.nobootmusic", 0) == 0);
+        mBootMusic.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                final boolean val = (Boolean) newValue;
+                SystemProperties.set("persist.sys.nobootmusic", val? "0" : "1");
+                return true;
+            }
+        });
+    }
+    
+    // === vvs switch ===
+	   private void initUpdateVvsSwitch(PreferenceCategory root) {
+	      mVvsSwitch = (TwoStatePreference) root.findPreference(KEY_VVS_SWITCH);
+	      if (mVvsSwitch == null) {
+	          Log.i(TAG, "Preference not found: " + KEY_VVS_SWITCH);
+	          return;
+	      }
+	      
+				// If there is no headset, disable the switch
+	      AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE); 
+				boolean isHeadsetOn=audioManager.isWiredHeadsetOn();
+	    	mVvsSwitch.setEnabled(isHeadsetOn);
+	    	
+	      mVvsSwitch.setPersistent(false);
+	      mVvsSwitch.setChecked(SystemProperties.getInt("persist.sys.vvs_switch", 1) != 0);
+
+	      mVvsSwitch.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+	          @Override
+	          public boolean onPreferenceChange(Preference preference, Object newValue) {
+	              final boolean val = (Boolean) newValue;
+	              SystemProperties.set("persist.sys.vvs_switch", val ? "1" : "0");
+	              return true;
+	          }
+	      });
+    }
+
     // === Pulse notification light ===
 
     private void initPulse(PreferenceCategory parent) {
@@ -564,6 +620,8 @@ public class NotificationSettings extends SettingsPreferenceFragment implements 
                 final IntentFilter filter = new IntentFilter();
                 filter.addAction(NotificationManager.ACTION_EFFECTS_SUPPRESSOR_CHANGED);
                 filter.addAction(AudioManager.INTERNAL_RINGER_MODE_CHANGED_ACTION);
+                filter.addAction("android.intent.action.HEADSET_PLUG");   
+                filter.addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
                 mContext.registerReceiver(this, filter);
             } else {
                 mContext.unregisterReceiver(this);
@@ -579,6 +637,21 @@ public class NotificationSettings extends SettingsPreferenceFragment implements 
             } else if (AudioManager.INTERNAL_RINGER_MODE_CHANGED_ACTION.equals(action)) {
                 mHandler.sendEmptyMessage(H.UPDATE_RINGER_MODE);
             }
+            
+            if (mVvsSwitch != null) {
+	            //Headset connected
+	            if ("android.intent.action.HEADSET_PLUG".equals(action)){
+	            	if (intent.hasExtra("state"))   
+	                if (intent.getIntExtra("state", 0) != 0) { 
+	                	  mVvsSwitch.setEnabled(true); 
+	                  }
+	            }
+	            
+	            //Headset disconnected
+	            else if(AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(action)) {
+	            	mVvsSwitch.setEnabled(false);
+	            }
+	          }
         }
     }
 
@@ -602,7 +675,9 @@ public class NotificationSettings extends SettingsPreferenceFragment implements 
                 rt.add(KEY_RING_VOLUME);
                 rt.add(KEY_PHONE_RINGTONE);
                 rt.add(KEY_VIBRATE_WHEN_RINGING);
-            }
+                rt.add(KEY_BOOT_MUSIC);
+                rt.add(KEY_VVS_SWITCH);
+              }
             return rt;
         }
     };

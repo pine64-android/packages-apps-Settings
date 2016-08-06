@@ -26,6 +26,8 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.BroadcastReceiver;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.net.ConnectivityManager;
@@ -51,6 +53,7 @@ import com.android.internal.telephony.SmsApplication;
 import com.android.internal.telephony.SmsApplication.SmsApplicationData;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.TelephonyProperties;
+import com.android.internal.telephony.IccCardConstants;
 import com.android.settings.nfc.NfcEnabler;
 import com.android.settings.search.BaseSearchIndexProvider;
 import com.android.settings.search.Indexable;
@@ -82,6 +85,7 @@ public class WirelessSettings extends SettingsPreferenceFragment
 
     private AirplaneModeEnabler mAirplaneModeEnabler;
     private SwitchPreference mAirplaneModePreference;
+    private PreferenceScreen mMobileNetworkSettings;
     private NfcEnabler mNfcEnabler;
     private NfcAdapter mNfcAdapter;
     private NsdEnabler mNsdEnabler;
@@ -90,12 +94,25 @@ public class WirelessSettings extends SettingsPreferenceFragment
     private TelephonyManager mTm;
     private PackageManager mPm;
     private UserManager mUm;
+    private final IntentFilter mFilter;
+    private final BroadcastReceiver mEthIfReceiver;
 
     private static final int MANAGE_MOBILE_PLAN_DIALOG_ID = 1;
     private static final String SAVED_MANAGE_MOBILE_PLAN_MSG = "mManageMobilePlanMessage";
 
     private AppListPreference mSmsApplicationPreference;
 
+    public WirelessSettings() {
+        super();
+        mFilter = new IntentFilter();
+        mFilter.addAction(TelephonyIntents.ACTION_SIM_STATE_CHANGED);
+        mEthIfReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                handleEvent(context, intent);
+            }
+        };
+    }
     /**
      * Invoked on each preference click in this hierarchy, overrides
      * PreferenceFragment's implementation.  Used to make sure we track the
@@ -272,7 +289,7 @@ public class WirelessSettings extends SettingsPreferenceFragment
 
         mAirplaneModeEnabler = new AirplaneModeEnabler(activity, mAirplaneModePreference);
         mNfcEnabler = new NfcEnabler(activity, nfc, androidBeam);
-
+        mMobileNetworkSettings = (PreferenceScreen)findPreference(KEY_MOBILE_NETWORK_SETTINGS);
         mSmsApplicationPreference = (AppListPreference) findPreference(KEY_SMS_APPLICATION);
         // Restricted users cannot currently read/write SMS.
         if (isRestrictedUser) {
@@ -340,11 +357,8 @@ public class WirelessSettings extends SettingsPreferenceFragment
             removePreference(KEY_MOBILE_NETWORK_SETTINGS);
             removePreference(KEY_MANAGE_MOBILE_PLAN);
         }
-        // Remove Mobile Network Settings and Manage Mobile Plan
-        // if config_show_mobile_plan sets false.
-        final boolean isMobilePlanEnabled = this.getResources().getBoolean(
-                R.bool.config_show_mobile_plan);
-        if (!isMobilePlanEnabled) {
+
+        if (SystemProperties.get("ro.sw.embeded.telephony", "false").equals("false")) {
             Preference pref = findPreference(KEY_MANAGE_MOBILE_PLAN);
             if (pref != null) {
                 removePreference(KEY_MANAGE_MOBILE_PLAN);
@@ -414,6 +428,15 @@ public class WirelessSettings extends SettingsPreferenceFragment
 
     @Override
     public void onResume() {
+        if (SystemProperties.get("ro.sw.embeded.telephony", "false").equals("false")) {
+            int iSimState = mTm.getSimState();
+            if ((iSimState == TelephonyManager.SIM_STATE_UNKNOWN)) {
+                getPreferenceScreen().removePreference(mMobileNetworkSettings);
+            }else{
+                getPreferenceScreen().addPreference(mMobileNetworkSettings);
+            }
+        }
+        getActivity().registerReceiver(mEthIfReceiver, mFilter);
         super.onResume();
 
         mAirplaneModeEnabler.resume();
@@ -445,6 +468,7 @@ public class WirelessSettings extends SettingsPreferenceFragment
         if (mNsdEnabler != null) {
             mNsdEnabler.pause();
         }
+        getActivity().unregisterReceiver(mEthIfReceiver);
     }
 
     @Override
@@ -576,4 +600,26 @@ public class WirelessSettings extends SettingsPreferenceFragment
                 return result;
             }
         };
+
+    private void handleEvent(Context context, Intent intent) {
+        String action = intent.getAction();
+        if(SystemProperties.get("ro.sw.embeded.telephony", "false").equals("false")){
+            if(TelephonyIntents.ACTION_SIM_STATE_CHANGED.equals(action)){
+                log("SimState = " + mTm.getSimState());
+                log("hasIccCard : " + mTm.hasIccCard());
+                log("getSimOperator : " + mTm.getSimOperator());
+                log("Operator_length = " + mTm.getSimOperator().length());
+                log("getVoiceNetworkType = " + mTm.getVoiceNetworkType());
+                String stateExtra = intent.getStringExtra(IccCardConstants.INTENT_KEY_ICC_STATE);
+                log("SIM_state_changed = " + stateExtra);
+                int iSimState = mTm.getSimState();
+                if ((iSimState == TelephonyManager.SIM_STATE_UNKNOWN)) {
+                    getPreferenceScreen().removePreference(mMobileNetworkSettings);
+                }else{
+                    getPreferenceScreen().addPreference(mMobileNetworkSettings);
+                }
+            }
+        }
+    }
+
 }

@@ -84,6 +84,9 @@ public class Memory extends SettingsPreferenceFragment implements Indexable {
 
     private ArrayList<StorageVolumePreferenceCategory> mCategories = Lists.newArrayList();
 
+    private String unmoutUSBorSD = "";
+    private StorageTotalPreferenceCategory mStorageTotalPreferenceCategory;
+
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -97,6 +100,9 @@ public class Memory extends SettingsPreferenceFragment implements Indexable {
 
         addPreferencesFromResource(R.xml.device_info_memory);
 
+        mStorageTotalPreferenceCategory = new StorageTotalPreferenceCategory(context);
+        getPreferenceScreen().addPreference(mStorageTotalPreferenceCategory);
+        mStorageTotalPreferenceCategory.init();
         addCategory(StorageVolumePreferenceCategory.buildForInternal(context));
 
         final StorageVolume[] storageVolumes = mStorageManager.getVolumeList();
@@ -240,6 +246,11 @@ public class Memory extends SettingsPreferenceFragment implements Indexable {
                 sLastClickedMountToggle = preference;
                 sClickedMountPoint = volume.getPath();
                 String state = mStorageManager.getVolumeState(volume.getPath());
+                if (volume.getPath().contains("usb")){
+                    unmoutUSBorSD = "usb";
+                }else{
+                    unmoutUSBorSD = "sd";
+                }
                 if (Environment.MEDIA_MOUNTED.equals(state) ||
                         Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
                     unmount();
@@ -276,19 +287,19 @@ public class Memory extends SettingsPreferenceFragment implements Indexable {
         switch (id) {
         case DLG_CONFIRM_UNMOUNT:
                 return new AlertDialog.Builder(getActivity())
-                    .setTitle(R.string.dlg_confirm_unmount_title)
+                    .setTitle(unmoutUSBorSD.equals("usb")?R.string.custom_usb_dlg_confirm_unmount_title:R.string.custom_sd_dlg_confirm_unmount_title)
                     .setPositiveButton(R.string.dlg_ok, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
                             doUnmount();
                         }})
                     .setNegativeButton(R.string.cancel, null)
-                    .setMessage(R.string.dlg_confirm_unmount_text)
+                    .setMessage(unmoutUSBorSD.equals("usb")?R.string.custom_usb_dlg_confirm_unmount_text:R.string.custom_sd_dlg_confirm_unmount_text)
                     .create();
         case DLG_ERROR_UNMOUNT:
                 return new AlertDialog.Builder(getActivity())
             .setTitle(R.string.dlg_error_unmount_title)
             .setNeutralButton(R.string.dlg_ok, null)
-            .setMessage(R.string.dlg_error_unmount_text)
+            .setMessage(unmoutUSBorSD.equals("usb")?R.string.custom_usb_dlg_error_unmount_text:R.string.custom_sd_dlg_error_unmount_text)
             .create();
         }
         return null;
@@ -296,7 +307,7 @@ public class Memory extends SettingsPreferenceFragment implements Indexable {
 
     private void doUnmount() {
         // Present a toast here
-        Toast.makeText(getActivity(), R.string.unmount_inform_text, Toast.LENGTH_SHORT).show();
+        Toast.makeText(getActivity(), unmoutUSBorSD.equals("usb")?R.string.custom_usb_unmount_inform_text:R.string.custom_sd_unmount_inform_text, Toast.LENGTH_SHORT).show();
         IMountService mountService = getMountService();
         try {
             sLastClickedMountToggle.setEnabled(false);
