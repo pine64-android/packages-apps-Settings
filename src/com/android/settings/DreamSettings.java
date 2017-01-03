@@ -193,9 +193,7 @@ public class DreamSettings extends SettingsPreferenceFragment implements
 
     private Dialog createWhenToDreamDialog() {
         final CharSequence[] items = {
-                mContext.getString(R.string.screensaver_settings_summary_dock),
-                mContext.getString(R.string.screensaver_settings_summary_sleep),
-                mContext.getString(R.string.screensaver_settings_summary_either_short)
+                mContext.getString(R.string.screensaver_settings_summary_sleep)
         };
 
         int initialSelection = mBackend.isActivatedOnDock() && mBackend.isActivatedOnSleep() ? 2

@@ -47,13 +47,16 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.os.SystemProperties;
+import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceClickListener;
+import android.preference.PreferenceCategory;
 import android.preference.PreferenceScreen;
 import android.preference.SwitchPreference;
 import android.provider.SearchIndexableResource;
 import android.provider.Settings;
+import android.provider.Settings.SettingNotFoundException;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -80,6 +83,16 @@ public class DisplaySettings extends SettingsPreferenceFragment implements
     private static final String KEY_CAMERA_DOUBLE_TAP_POWER_GESTURE
             = "camera_double_tap_power_gesture";
 
+	/* add by allwinner */
+    private static final String KEY_BRIGHT_SYSTEM = "bright_system";
+    private static final String KEY_BRIGHT_SYSTEM_DEMO = "bright_demo_mode";
+    private static final String KEY_BRIGHTNESS_LIGHT = "brightness_light";
+    private static final String KEY_BRIGHTNESS_LIGHT_DEMO = "backlight_demo_mode";
+    private static final String KEY_HDMI_OUTPUT_MODE = "hdmi_output_mode";
+    private static final String KEY_HDMI_OUTPUT_MODE_720P = "hdmi_output_mode_720p";
+    private static final String KEY_HDMI_OUTPUT_MODE_CATE = "hdmi_output_mode_cate";
+    private static final String KEY_HDMI_FULL_SCREEN = "hdmi_full_screen";
+
     private static final int DLG_GLOBAL_CHANGE_WARNING = 1;
 
     private WarnedListPreference mFontSizePref;
@@ -95,6 +108,13 @@ public class DisplaySettings extends SettingsPreferenceFragment implements
     private SwitchPreference mAutoBrightnessPreference;
     private SwitchPreference mCameraGesturePreference;
     private SwitchPreference mCameraDoubleTapPowerGesturePreference;
+
+	/* add by allwinner */
+    private CheckBoxPreference mBrightSystem,mBrightSystemDemo;
+    private CheckBoxPreference mBrightnessLight,mBrightnessLightDemo;
+    private ListPreference mHdmiOutputModePreference;
+    private PreferenceCategory mHdmiOutputModeCategory;
+    private CheckBoxPreference mHdmiFullScreen;
 
     @Override
     protected int getMetricsCategory() {
@@ -217,6 +237,106 @@ public class DisplaySettings extends SettingsPreferenceFragment implements
             mNightModePreference.setValue(String.valueOf(currentNightMode));
             mNightModePreference.setOnPreferenceChangeListener(this);
         }
+
+		/* add by allwinner */
+		mBrightSystem = (CheckBoxPreference)findPreference(KEY_BRIGHT_SYSTEM);
+		mBrightSystemDemo = (CheckBoxPreference)findPreference(KEY_BRIGHT_SYSTEM_DEMO);
+		boolean demoEnabled;
+		if(mBrightSystem != null) {
+			try{
+					demoEnabled = (Settings.System.getInt(resolver,
+									Settings.System.BRIGHT_SYSTEM_MODE)&0x01) > 0;
+					mBrightSystem.setChecked(demoEnabled);
+					mBrightSystem.setOnPreferenceChangeListener(this);
+					if (mBrightSystemDemo != null && demoEnabled) {
+							try {
+									mBrightSystemDemo.setChecked((Settings.System.getInt(resolver,
+													Settings.System.BRIGHT_SYSTEM_MODE)&0x02) > 0);
+									mBrightSystemDemo.setOnPreferenceChangeListener(this);
+								}	catch (SettingNotFoundException snfe)	{
+									Log.e(TAG,Settings.System.BRIGHT_SYSTEM_MODE + " not found");
+								}
+							} else if (mBrightSystemDemo == null) {
+									getPreferenceScreen().removePreference(mBrightSystemDemo);
+								}	else {
+										mBrightSystemDemo.setEnabled(demoEnabled);
+									}
+								}catch (SettingNotFoundException snfe) {
+									Log.e(TAG, Settings.System.BRIGHT_SYSTEM_MODE + " not found");
+								}
+					}else {
+							getPreferenceScreen().removePreference(mBrightSystem);
+						}
+
+					mBrightnessLight = (CheckBoxPreference)findPreference(KEY_BRIGHTNESS_LIGHT);
+					mBrightnessLightDemo = (CheckBoxPreference)findPreference(KEY_BRIGHTNESS_LIGHT_DEMO);
+					if(mBrightnessLight != null) {
+						try{
+								demoEnabled = (Settings.System.getInt(resolver,
+												Settings.System.BRIGHTNESS_LIGHT_MODE)&0x01) > 0;
+								mBrightnessLight.setChecked(demoEnabled);
+								mBrightnessLight.setOnPreferenceChangeListener(this);
+								if (mBrightnessLightDemo != null && demoEnabled) {
+										try {
+												mBrightnessLightDemo.setChecked((Settings.System.getInt(resolver,
+																Settings.System.BRIGHTNESS_LIGHT_MODE)&0x02) > 0);
+												mBrightnessLightDemo.setOnPreferenceChangeListener(this);
+											}	catch (SettingNotFoundException snfe)	{
+												Log.e(TAG,Settings.System.BRIGHTNESS_LIGHT_MODE + " not found");
+											}
+										} else if (mBrightnessLightDemo == null) {
+												getPreferenceScreen().removePreference(mBrightnessLightDemo);
+											}	else {
+													mBrightnessLightDemo.setEnabled(demoEnabled);
+												}
+											}catch (SettingNotFoundException snfe) {
+												Log.e(TAG, Settings.System.BRIGHTNESS_LIGHT_MODE + " not found");
+											}
+						}else {
+								getPreferenceScreen().removePreference(mBrightnessLight);
+        }
+
+        final int sethdmimode = getResources().getInteger(R.integer.config_hdmi_settings_mode);
+        final boolean isShowHdmiMode = (sethdmimode & 0x03) > 0;
+        final boolean isShow1080p = (sethdmimode & 0x02) > 0;
+        final boolean isShowFullScreen = (sethdmimode & 0x04) > 0;
+        mHdmiOutputModeCategory = (PreferenceCategory) findPreference(KEY_HDMI_OUTPUT_MODE_CATE);
+        mHdmiFullScreen = (CheckBoxPreference)findPreference(KEY_HDMI_FULL_SCREEN);
+        if (isShow1080p) {
+            mHdmiOutputModePreference = (ListPreference) findPreference(KEY_HDMI_OUTPUT_MODE_720P);
+            mHdmiOutputModeCategory.removePreference(mHdmiOutputModePreference);
+            mHdmiOutputModePreference = (ListPreference) findPreference(KEY_HDMI_OUTPUT_MODE);
+        } else {
+            mHdmiOutputModePreference = (ListPreference) findPreference(KEY_HDMI_OUTPUT_MODE);
+            mHdmiOutputModeCategory.removePreference(mHdmiOutputModePreference);
+            mHdmiOutputModePreference = (ListPreference) findPreference(KEY_HDMI_OUTPUT_MODE_720P);
+        }
+
+        if (sethdmimode != 0) {
+            if (isShowHdmiMode) {
+                final int currentHdmiMode = Settings.System.getInt(resolver, Settings.System.HDMI_OUTPUT_MODE, 10);
+                mHdmiOutputModePreference.setValue(String.valueOf(currentHdmiMode));
+                mHdmiOutputModePreference.setOnPreferenceChangeListener(this);
+            } else {
+                mHdmiOutputModeCategory.removePreference(mHdmiOutputModePreference);
+                mHdmiOutputModePreference = null;
+            }
+
+            if (isShowFullScreen) {
+                final boolean isHdmiFullScreen = Settings.System.getInt(resolver,
+                        Settings.System.HDMI_FULL_SCREEN, 0) > 0;
+                mHdmiFullScreen.setChecked(isHdmiFullScreen);
+                mHdmiFullScreen.setOnPreferenceChangeListener(this);
+            } else {
+                mHdmiOutputModeCategory.removePreference(mHdmiFullScreen);
+                mHdmiFullScreen = null;
+            }
+        } else {
+            getPreferenceScreen().removePreference(mHdmiOutputModeCategory);
+            mHdmiOutputModePreference = null;
+            mHdmiOutputModeCategory = null;
+            mHdmiFullScreen = null;
+        }
     }
 
     private static boolean allowAllRotations(Context context) {
@@ -277,14 +397,40 @@ public class DisplaySettings extends SettingsPreferenceFragment implements
                         best = i;
                     }
                 }
-                summary = preference.getContext().getString(R.string.screen_timeout_summary,
-                        entries[best]);
+                if (currentTimeout == Integer.MAX_VALUE)
+                    summary = entries[best].toString();
+                else
+                    summary = preference.getContext().getString(R.string.screen_timeout_summary,
+                            entries[best]);
             }
         }
         preference.setSummary(summary);
     }
 
+    private void checkAddNeverTimeout(ListPreference screenTimeoutPreference) {
+        boolean isShowNeverTimeout = screenTimeoutPreference.getContext().getResources().getBoolean(
+                R.bool.config_show_screen_off_never_timeout);
+        if (!isShowNeverTimeout) {
+            return;
+        }
+        final CharSequence[] entries = screenTimeoutPreference.getEntries();
+        final CharSequence[] values = screenTimeoutPreference.getEntryValues();
+        ArrayList<CharSequence> newEntries = new ArrayList<CharSequence>();
+        ArrayList<CharSequence> newValues = new ArrayList<CharSequence>();
+        for (int i = 0; i < values.length; i++) {
+            newEntries.add(entries[i]);
+            newValues.add(values[i]);
+        }
+        newEntries.add(screenTimeoutPreference.getContext().getString(R.string.screen_off_never_sleep_summary));
+        newValues.add(String.valueOf(Integer.MAX_VALUE));
+        screenTimeoutPreference.setEntries(
+                newEntries.toArray(new CharSequence[newEntries.size()]));
+        screenTimeoutPreference.setEntryValues(
+                newValues.toArray(new CharSequence[newValues.size()]));
+    }
+
     private void disableUnusableTimeouts(ListPreference screenTimeoutPreference) {
+        checkAddNeverTimeout(screenTimeoutPreference);
         final DevicePolicyManager dpm =
                 (DevicePolicyManager) getActivity().getSystemService(
                 Context.DEVICE_POLICY_SERVICE);
@@ -437,6 +583,50 @@ public class DisplaySettings extends SettingsPreferenceFragment implements
 
     @Override
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
+		/* add by allwinner */
+		boolean value;
+		int value2;
+		int value3;
+		try {
+			if (preference == mBrightSystem) {
+				value = mBrightSystem.isChecked();
+				value2 = Settings.System.getInt(getContentResolver(),
+										Settings.System.BRIGHT_SYSTEM_MODE);
+				Settings.System.putInt(getContentResolver(),Settings.System.BRIGHT_SYSTEM_MODE,
+										value ? value2|0x01 : value2&0x02);
+				mBrightSystemDemo.setEnabled(value);
+			} else if (preference == mBrightSystemDemo) {
+				value = mBrightSystemDemo.isChecked();
+				value2 = Settings.System.getInt(getContentResolver(),
+										Settings.System.BRIGHT_SYSTEM_MODE);
+				Settings.System.putInt(getContentResolver(),Settings.System.BRIGHT_SYSTEM_MODE,
+										value ? value2|0x02 : value2&0x01);
+			} else if (preference == mBrightnessLight) {
+				value = mBrightnessLight.isChecked();
+				value2 = Settings.System.getInt(getContentResolver(),
+										Settings.System.BRIGHTNESS_LIGHT_MODE);
+				value3 = Settings.System.getInt(getContentResolver(),Settings.System.BRIGHTNESS_LIGHT_MODE,
+										value ? value2|0x01 : value2&0x02);
+				Settings.System.putInt(getContentResolver(),Settings.System.BRIGHTNESS_LIGHT_MODE,
+										value ? value2|0x01 : value2&0x02);
+				mBrightnessLightDemo.setEnabled(value);
+			} else if (preference == mBrightnessLightDemo) {
+				value = mBrightnessLightDemo.isChecked();
+				value2 = Settings.System.getInt(getContentResolver(),
+										Settings.System.BRIGHTNESS_LIGHT_MODE);
+				value3 = Settings.System.getInt(getContentResolver(),Settings.System.BRIGHTNESS_LIGHT_MODE,
+										value ? value2|0x02 : value2&0x01);
+				Settings.System.putInt(getContentResolver(),Settings.System.BRIGHTNESS_LIGHT_MODE,
+										value ? value2|0x02 : value2&0x01);
+			} else if (preference == mHdmiFullScreen) {
+				value = mHdmiFullScreen.isChecked();
+	        	Settings.System.putInt(getContentResolver(),Settings.System.HDMI_FULL_SCREEN,
+	                        value ? 0x01 : 0);
+	        }
+        } catch (SettingNotFoundException e) {
+				Log.e(TAG, Settings.System.BRIGHTNESS_LIGHT_MODE + " or " +
+							Settings.System.BRIGHT_SYSTEM_MODE + "not found");
+        }
         return super.onPreferenceTreeClick(preferenceScreen, preference);
     }
 
@@ -490,6 +680,15 @@ public class DisplaySettings extends SettingsPreferenceFragment implements
                 uiManager.setNightMode(value);
             } catch (NumberFormatException e) {
                 Log.e(TAG, "could not persist night mode setting", e);
+            }
+        }
+		/* add by allwinner */
+		if (KEY_HDMI_OUTPUT_MODE.equals(key) || KEY_HDMI_OUTPUT_MODE_720P.equals(key)) {
+            final int value = Integer.parseInt((String) objValue);
+            try {
+				Settings.System.putInt(getContentResolver(), Settings.System.HDMI_OUTPUT_MODE, value);
+            } catch (NumberFormatException e) {
+                Log.e(TAG, "could not persist hdmi output mode setting", e);
             }
         }
         return true;

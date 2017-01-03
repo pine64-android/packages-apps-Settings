@@ -29,6 +29,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
+import android.os.SystemProperties;
 import android.preference.Preference;
 import android.preference.PreferenceScreen;
 import android.preference.SwitchPreference;
@@ -43,7 +44,9 @@ import com.android.settingslib.datetime.ZoneGetter;
 
 import java.util.Calendar;
 import java.util.Date;
-
+import android.telephony.TelephonyManager;
+import com.android.internal.telephony.TelephonyIntents;
+import android.util.Log;
 public class DateTimeSettings extends SettingsPreferenceFragment
         implements OnSharedPreferenceChangeListener,
                 TimePickerDialog.OnTimeSetListener, DatePickerDialog.OnDateSetListener {
@@ -70,6 +73,7 @@ public class DateTimeSettings extends SettingsPreferenceFragment
     private SwitchPreference mAutoTimeZonePref;
     private Preference mTimeZone;
     private Preference mDatePref;
+    private TelephonyManager mTelephonyManager;
 
     @Override
     protected int getMetricsCategory() {
@@ -110,7 +114,8 @@ public class DateTimeSettings extends SettingsPreferenceFragment
         mAutoTimeZonePref = (SwitchPreference) findPreference(KEY_AUTO_TIME_ZONE);
         // Override auto-timezone if it's a wifi-only device or if we're still in setup wizard.
         // TODO: Remove the wifiOnly test when auto-timezone is implemented based on wifi-location.
-        if (Utils.isWifiOnly(getActivity()) || isFirstRun) {
+        if (Utils.isWifiOnly(getActivity()) || isFirstRun ||
+            SystemProperties.get("ro.sw.embeded.telephony", "false").equals("false")) {
             getPreferenceScreen().removePreference(mAutoTimeZonePref);
             autoTimeZoneEnabled = false;
         }
@@ -133,6 +138,7 @@ public class DateTimeSettings extends SettingsPreferenceFragment
     public void onResume() {
         super.onResume();
 
+        mTelephonyManager = TelephonyManager.getDefault();
         getPreferenceScreen().getSharedPreferences()
                 .registerOnSharedPreferenceChangeListener(this);
 
@@ -144,6 +150,7 @@ public class DateTimeSettings extends SettingsPreferenceFragment
         filter.addAction(Intent.ACTION_TIME_CHANGED);
         filter.addAction(Intent.ACTION_TIMEZONE_CHANGED);
         getActivity().registerReceiver(mIntentReceiver, filter, null, null);
+        getActivity().registerReceiver(mSimStateReceiver,new IntentFilter(TelephonyIntents.ACTION_SIM_STATE_CHANGED));
 
         updateTimeAndDateDisplay(getActivity());
     }
@@ -152,6 +159,7 @@ public class DateTimeSettings extends SettingsPreferenceFragment
     public void onPause() {
         super.onPause();
         getActivity().unregisterReceiver(mIntentReceiver);
+        getActivity().unregisterReceiver(mSimStateReceiver);
         getPreferenceScreen().getSharedPreferences()
                 .unregisterOnSharedPreferenceChangeListener(this);
     }
@@ -351,6 +359,30 @@ public class DateTimeSettings extends SettingsPreferenceFragment
             final Activity activity = getActivity();
             if (activity != null) {
                 updateTimeAndDateDisplay(activity);
+            }
+        }
+    };
+
+    private BroadcastReceiver mSimStateReceiver = new BroadcastReceiver() {
+    @Override
+        public void onReceive(Context context, Intent intent) {
+            // TODO Auto-generated method stub
+            if(SystemProperties.get("ro.sw.embeded.telephony", "false").equals("false")){
+                String action = intent.getAction();
+                if(TelephonyIntents.ACTION_SIM_STATE_CHANGED.equals(action)){
+                    int iSimState = mTelephonyManager.getSimState();
+                    if ((iSimState == TelephonyManager.SIM_STATE_UNKNOWN)
+                      || (iSimState == TelephonyManager.SIM_STATE_NOT_READY)) {
+                        getPreferenceScreen().removePreference(mAutoTimeZonePref);
+                        mAutoTimeZonePref.setChecked(false);
+                        mTimeZone.setEnabled(true);
+                    } else {
+                        boolean autoZone = getAutoState(Settings.Global.AUTO_TIME_ZONE);
+                        getPreferenceScreen().addPreference(mAutoTimeZonePref);
+                        mAutoTimeZonePref.setChecked(autoZone);
+                        mTimeZone.setEnabled(!autoZone);
+                    }
+                }
             }
         }
     };
